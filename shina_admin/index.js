@@ -94,7 +94,6 @@ bot.catch(async (err, ctx) => {
     await ctx.leaveChat();
     return;
   }
-  console.log("-------------------------");
 });
 
 bot.use(async (ctx, err) => {

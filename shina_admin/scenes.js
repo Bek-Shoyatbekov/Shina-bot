@@ -8,6 +8,7 @@ import {
 } from "./utils.js";
 import { addProducts, getProducts } from "./controllers.js";
 import { productsMenu } from "./keyboards.js";
+import { keyboards } from "./commands.js";
 
 // Gather product info
 export const gatherProductWizard = new Scenes.WizardScene(
@@ -20,6 +21,11 @@ export const gatherProductWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   async (ctx) => {
+    let action = ctx.message.text;
+    if (action == keyboards.back) {
+      await ctx.scene.leave();
+      return ctx.reply("Menu", productsMenu);
+    }
     const isValidProductInfo = isValidProducts(ctx.message.text);
     if (!isValidProductInfo || isValidProductInfo == "Invalid input") {
       await ctx.reply("Invalid product info");
@@ -58,26 +64,26 @@ export const showProductWizard = new Scenes.WizardScene(
     ctx.sendChatAction("typing");
     const products = await getProducts(offset, limit);
     const result = productsToShow(products, count);
-    const keyboards = paginationProducts(offset, products.length - offset > 0);
+    const resKeyboards = paginationProducts(
+      offset,
+      products.length - offset > 0
+    );
 
-    if (action == "▶️") {
+    if (action == keyboards.forward) {
       offset += limit - 1;
       count += limit;
-
-      await ctx.wizard.selectStep(0);
+      ctx.wizard.selectStep(0);
     }
-    if (action == "◀️") {
+    if (action == keyboards.back) {
       offset -= limit - 1;
       count -= limit;
-
-      await ctx.wizard.selectStep(0);
+      ctx.wizard.selectStep(0);
     }
-    if (action == "Bosh menuga qaytish") {
-      return ctx.scene.leave();
+    if (action == keyboards.menu) {
+      await ctx.scene.leave();
+      return ctx.reply("Menu", productsMenu);
     }
-    await ctx.reply(result, keyboards);
+    await ctx.reply(result, resKeyboards);
     return ctx.wizard.selectStep(0);
   }
-  //   ,
-  //   (ctx) => {}
 );
