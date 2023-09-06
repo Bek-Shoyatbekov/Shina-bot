@@ -1,0 +1,55 @@
+{
+    "phone":{
+        "text": "Iltimos, telefon raqamingizni kiriting",
+        "buttons": {
+                "text": "Telefon raqamni yuborish",
+                "request_contact": true
+        }
+    },
+    "region":{
+        "text": "Iltimos, hududingizni tanlang:",
+        "buttons":[
+            ["Toshkent shahri", "Toshkent vil."],
+            [ "Andijon", "Buxoro"],
+            ["Farg'ona", "Jizzax"],
+            ["Xorazm", "Namangan"],
+            ["Navoiy", "Qashqadaryo"],
+            ["Qoraqalpog'iston", "Samarqand"],
+            ["Sirdaryo", "Surxondaryo"],
+            ["Qoraqalpog'iston"]
+        ]
+    },
+    "tireOrAcce":{
+        "text": "Iltimos, mahsulot turi tanlang:",
+        "buttons":[
+            ["Shin", "Aksessuarlar"]
+        ]
+    },
+    "tireForSeason":{
+        "text": "Iltimos, shina mavsumiy turi tanlang:",
+        "buttons":[
+            ["Yozgi", "Qishgi", "Doimiy"]
+        ]
+    },
+    "diameter":{
+        "text": "Iltimos, shina diametrini tanlang:",
+        "buttons":[
+            ["R12", "R13", "R14", "R15", "R16", "R17", "R18", "R19", "R20", "R21", "R22"]
+        ]
+    },
+    "sizeOfTire":{
+        "text": "Iltimos, shina o'lchamini tanlang:"
+    },
+    "brands":{
+        "text": "Iltimos, shina brendini tanlang:"
+    },
+    "paymentMethod":{
+        "text": "Iltimos, to'lov usulini tanlang:",
+        "buttons":[
+            ["Naqd", "Bo'lib to'lash"]
+        ]
+    },
+    "weWillContact":{
+        "text": "Bizning operatorlarimiz 10 daqiqada siz bilan bog'lanishadi"
+    }
+}
