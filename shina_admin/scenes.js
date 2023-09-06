@@ -12,22 +12,22 @@ import { productsMenu } from "./keyboards.js";
 // Gather product info
 export const gatherProductWizard = new Scenes.WizardScene(
   "gather-product-info",
-  (ctx) => {
-    ctx.reply(
+  async (ctx) => {
+    await ctx.reply(
       `Mahsulotlar yoki mahsulot nomini shu ko'rinishda kiriting\n 1 tadan ko'p mahsulot qo'shish uchun - qo'yishni unutmang! \n ${example} `
     );
     ctx.wizard.state.data = {};
     return ctx.wizard.next();
   },
-  (ctx) => {
+  async (ctx) => {
     const isValidProductInfo = isValidProducts(ctx.message.text);
     if (!isValidProductInfo || isValidProductInfo == "Invalid input") {
-      ctx.reply("Invalid product info");
+      await ctx.reply("Invalid product info");
       ctx.wizard.selectStep(0);
       return;
     }
     ctx.wizard.state.data.products = ctx.message.text;
-    ctx.reply(
+    await ctx.reply(
       "Mahsulotlarni to'g'ri kiritganingizni tasdiqlang!",
       Markup.keyboard(["Ha", "Yo'q"]).resize()
     );
@@ -37,12 +37,12 @@ export const gatherProductWizard = new Scenes.WizardScene(
     if (ctx.message.text == "Ha") {
       const productsToSave = makeProductsToSave(ctx.wizard.state.data.products);
       await addProducts(productsToSave);
-      ctx.reply("📔Mahsulotlar saqlandi", ctx.wizard.state.data.products);
+      await ctx.reply("📔Mahsulotlar saqlandi", ctx.wizard.state.data.products);
     } else {
-      return ctx.scene.leave();
+      return await ctx.scene.leave();
     }
-    ctx.reply(ctx.wizard.state.data.products);
-    ctx.reply("Menu", productsMenu);
+    await ctx.reply(ctx.wizard.state.data.products);
+    await ctx.reply("Menu", productsMenu);
     return ctx.scene.leave();
   }
 );
@@ -64,18 +64,18 @@ export const showProductWizard = new Scenes.WizardScene(
       offset += limit - 1;
       count += limit;
 
-      ctx.wizard.selectStep(0);
+      await ctx.wizard.selectStep(0);
     }
     if (action == "◀️") {
       offset -= limit - 1;
       count -= limit;
 
-      ctx.wizard.selectStep(0);
+      await ctx.wizard.selectStep(0);
     }
     if (action == "Bosh menuga qaytish") {
       return ctx.scene.leave();
     }
-    ctx.reply(result, keyboards);
+    await ctx.reply(result, keyboards);
     return ctx.wizard.selectStep(0);
   }
   //   ,

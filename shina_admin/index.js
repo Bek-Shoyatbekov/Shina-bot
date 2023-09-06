@@ -9,13 +9,18 @@ import connectDb from "./connectDb.js";
 config();
 const token = process.env.TOKEN;
 
-
 let stage = new Scenes.Stage([gatherProductWizard, showProductWizard]);
 
 // set-up db connections
 connectDb();
 
 export const bot = new Telegraf(token);
+
+bot.on("my_chatmember", async (ctx) => {
+  console.log("Quitting " + ctx.chat.id);
+  await ctx.leaveChat(ctx.message.chat.id);
+  return;
+});
 
 bot.use(session());
 bot.use(stage.middleware());
@@ -26,69 +31,80 @@ bot.context.db = {
   offset: 0,
 };
 
-bot.start((ctx) => {
-  ctx.reply("Assalamu Alaykum", mainMenu);
+bot.start(async (ctx) => {
+  await ctx.reply("Assalamu Alaykum", mainMenu);
   if (!bot.context.db.actions.get(ctx.chat.id)) {
     bot.context.db.actions.set(ctx.chat.id, "start");
   }
-});
-
-bot.use((ctx, next) => {
-  console.log(bot.context.db.actions);
-  next();
 });
 
 bot.hears(keyboards.money, async (ctx) => {
   bot.context.db.actions.set(ctx.chat.id, "kurs");
   ctx.sendChatAction("typing");
   let rate = await getUSDRate();
-  ctx.reply(`Hozirgi kurs: ${rate.val}`, dollarKursi);
+  await ctx.reply(`Hozirgi kurs: ${rate.val}`, dollarKursi);
 });
 
 bot.hears(keyboards.edit, async (ctx) => {
   bot.context.db.actions.set(ctx.chat.id, "changeKurs");
-  ctx.reply("Kursni kiriting: ");
+  await ctx.reply("Kursni kiriting: ");
 });
 
 bot.hears(/[0-9]/, async (ctx) => {
   ctx.sendChatAction("typing");
   if (bot.context.db.actions.get(ctx.chat.id) == "changeKurs") {
     await setUSDRate(Number(ctx.message.text));
-    ctx.reply(`✅ ${ctx.message.text}`);
+    await ctx.reply(`✅ ${ctx.message.text}`);
   }
 });
 
 bot.hears(keyboards.product, async (ctx) => {
-  ctx.reply("📔", productsMenu);
+  await ctx.reply("📔", productsMenu);
 });
 
 // Products Menu
-bot.hears(keyboards.add, (ctx) => {
+bot.hears(keyboards.add, async (ctx) => {
   try {
-    ctx.scene.enter("gather-product-info");
+    await ctx.scene.enter("gather-product-info");
   } catch (err) {
     console.log(err);
   }
 });
 
-bot.hears(keyboards.see, (ctx) => {
-  ctx.scene.enter("show-products");
+bot.hears(keyboards.see, async (ctx) => {
+  await ctx.scene.enter("show-products");
 });
 
 bot.hears(keyboards.edit, (ctx) => {});
 
 // General
 bot.hears("◀️", async (ctx) => {
-  ctx.reply("Asosiy menu", mainMenu);
+  await ctx.reply("Asosiy menu", mainMenu);
   return;
 });
 
-bot.catch((err, ctx) => {
-  console.log(err, ctx);
+bot.command("quit", async (ctx) => {
+  await ctx.telegram.leaveChat();
+  return;
 });
 
-bot.use((ctx) => {
-  ctx.reply("Command not found!", mainMenu);
+bot.catch(async (err, ctx) => {
+  if (err) {
+    console.log(err, ctx);
+    await ctx.leaveChat();
+    return;
+  }
+  console.log("-------------------------");
+});
+
+bot.use(async (ctx, err) => {
+  try {
+    if (!err) await ctx.reply("Command not found!", mainMenu);
+    return;
+  } catch (err) {
+    console.error("Error:", err);
+    return;
+  }
 });
 
 bot.launch();
