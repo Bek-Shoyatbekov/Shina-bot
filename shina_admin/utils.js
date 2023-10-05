@@ -1,7 +1,6 @@
 import { Markup } from "telegraf";
 import { keyboards } from "./commands.js";
 
-
 export const makeListProducts = (products) => {
   let stringProducts = "";
   for (let i = 0; i < products.length; i++) {
@@ -12,17 +11,17 @@ export const makeListProducts = (products) => {
 
 // giving new product info example
 export const example = `
-full_name: String,\n
-price_usd: Number,\n
-percent_3m: Number,\n
-percent_6m: Number,\n
-percent_9m: Number,\n
-quantity: Number,\n
-company: String,\n
-percent_cash: Number,\n
+tuliq_nomi: String,\n
+narxi : Number,\n
+foiz_3oy: Number,\n
+foiz_6oy: Number,\n
+foiz_9oy: Number,\n
+soni: Number,\n
+kompaniyasi: String,\n
+naqtga: Number,\n
 diameter: String,\n
-size: Number,\n
-width: Number,\n`;
+ulcham: Number,\n
+eni: Number,\n`;
 
 export function makeProductsToSave(products) {
   let arr = [];
@@ -41,73 +40,73 @@ export function makeProductsToSave(products) {
   return arr;
 }
 
-makeProductsToSave(`
-full_name: String,
+// makeProductsToSave(`
+// full_name: String,
 
-price_usd: Number,
+// price_usd: Number,
 
-percent_3m: Number,
+// percent_3m: Number,
 
-percent_6m: Number,
+// percent_6m: Number,
 
-percent_9m: Number,
+// percent_9m: Number,
 
-quantity: Number,
+// quantity: Number,
 
-company: String,
+// company: String,
 
-percent_cash: Number,
+// percent_cash: Number,
 
-diameter: String,
+// diameter: String,
 
-size: Number,
+// size: Number,
 
-width: Number
--
-full_name: 2,
+// width: Number
+// -
+// full_name: 2,
 
-price_usd: Number,
+// price_usd: Number,
 
-percent_3m: Number,
+// percent_3m: Number,
 
-percent_6m: Number,
+// percent_6m: Number,
 
-percent_9m: Number,
+// percent_9m: Number,
 
-quantity: Number,
+// quantity: Number,
 
-company: String,
+// company: String,
 
-percent_cash: Number,
+// percent_cash: Number,
 
-diameter: String,
+// diameter: String,
 
-size: Number,
+// size: Number,
 
-width: Number`);
+// width: Number`);
 
 const requiredProductInfo = [
-  "full_name",
+  "tuliq_nomi",
 
-  "price_usd",
+  "narxi",
 
-  "percent_3m",
+  "foiz_3oy",
 
-  "percent_6m",
+  "foiz_6oy",
 
-  "percent_9m",
+  "foiz_9oy",
 
-  "quantity",
+  "soni",
 
-  "company",
+  "kompaniyasi",
 
-  "percent_cash",
+  "naqtga",
 
   "diameter",
 
-  "size",
+  "ulcham",
 
-  "width",
+  "eni",
 ];
 export function isValidProducts(products) {
   if (products.length == 0) {
@@ -157,7 +156,7 @@ export function makeProductsKeyboard(from, to) {
 
 export const paginationProducts = (offset, next) => {
   let arr = [keyboards.menu];
-  if (offset > 0) {
+  if (offset > 1) {
     arr.push(keyboards.back);
   }
   if (next) {
@@ -166,3 +165,56 @@ export const paginationProducts = (offset, next) => {
 
   return Markup.keyboard([arr]).resize();
 };
+
+export function getPagination(current, maxpage) {
+  var keys = [];
+  if (current > 1) keys.push({ text: `«1`, callback_data: "1" });
+  if (current > 2)
+    keys.push({
+      text: `‹${current - 1}`,
+      callback_data: (current - 1).toString(),
+    });
+  keys.push({ text: `-${current}-`, callback_data: current.toString() });
+  if (current < maxpage - 1)
+    keys.push({
+      text: `${current + 1}›`,
+      callback_data: (current + 1).toString(),
+    });
+  if (current < maxpage)
+    keys.push({ text: `${maxpage}»`, callback_data: maxpage.toString() });
+
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [keys],
+    }),
+  };
+}
+
+export const makeButtons = (choiceButtons) => {
+  return Markup.inlineKeyboard([
+    ...choiceButtons,
+    [
+      Markup.button.callback("Prev", "prev"),
+      Markup.button.callback("Next", "next"),
+    ],
+  ]);
+};
+
+
+export function createButtons(page, totalItems, limit) {
+
+  const isFirstPage = page === 0
+  const isLastPage = page === Math.ceil(totalItems / limit) - 1
+
+  return Markup.inlineKeyboard([
+    Markup.button.callback(!isFirstPage ? '<<' : ' ', 'prev'),
+    Markup.button.callback(!isLastPage ? '>>' : ' ', 'next')
+  ])
+
+}
+
+export function chunk(arr, size) {
+  return Array.from({ length: Math.ceil(arr.length / size) })
+    .fill(0)
+    .map(() => arr.splice(0, size));
+}

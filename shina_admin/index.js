@@ -1,69 +1,64 @@
-import { dollarKursi, mainMenu, productsMenu } from "./keyboards.js";
-import { getUSDRate, setUSDRate } from "./controllers.js";
+import { mainMenu, productsMenu } from "./keyboards.js";
 import { keyboards } from "./commands.js";
 import { config } from "dotenv";
-import { gatherProductWizard, showProductWizard } from "./scenes.js";
+import {
+  concurrencyWizard,
+  gatherProductWizard,
+  showProductWizard
+} from "./scenes.js";
 import { Telegraf, Scenes, session } from "telegraf";
 import connectDb from "./connectDb.js";
+
 
 config();
 const token = process.env.TOKEN;
 
-let stage = new Scenes.Stage([gatherProductWizard, showProductWizard]);
+
+let stage = new Scenes.Stage([
+  gatherProductWizard,
+  showProductWizard,
+  concurrencyWizard
+]);
 
 // set-up db connections
 connectDb();
 
 export const bot = new Telegraf(token);
 
-bot.on("my_chatmember", async (ctx) => {
-  console.log("Quitting " + ctx.chat.id);
-  await ctx.leaveChat(ctx.message.chat.id);
-  return;
-});
+// Catch Telegraf errors
 
-bot.use(session());
+bot.use(session()).use((ctx, next) => {
+  ctx.session ??= {}; // set session if no exists
+  return next();
+});
 bot.use(stage.middleware());
 
 bot.context.db = {
   actions: new Map(),
   limit: 10,
   offset: 0,
+  
 };
 
 bot.start(async (ctx) => {
-  await ctx.reply("Assalamu Alaykum", mainMenu);
+  await ctx.reply("Assalamu Alaykum", {
+    reply_markup: {
+      remove_keyboard: true
+    }
+  });
   if (!bot.context.db.actions.get(ctx.chat.id)) {
     bot.context.db.actions.set(ctx.chat.id, "start");
   }
 });
 
-bot.hears(keyboards.money, async (ctx) => {
-  bot.context.db.actions.set(ctx.chat.id, "kurs");
-  ctx.sendChatAction("typing");
-  let rate = await getUSDRate();
-  await ctx.reply(`Hozirgi kurs: ${rate.val}`, dollarKursi);
+bot.command("kurs", async (ctx) => {
+  await ctx.scene.enter("concurrency");
 });
 
-bot.hears(keyboards.edit, async (ctx) => {
-  bot.context.db.actions.set(ctx.chat.id, "changeKurs");
-  await ctx.reply("Kursni kiriting: ");
-});
 
-bot.hears(/[0-9]/, async (ctx) => {
-  ctx.sendChatAction("typing");
-  if (bot.context.db.actions.get(ctx.chat.id) == "changeKurs") {
-    await setUSDRate(Number(ctx.message.text));
-    await ctx.reply(`✅ ${ctx.message.text}`);
-  }
-});
-
-bot.hears(keyboards.product, async (ctx) => {
-  await ctx.reply("📔", productsMenu);
-});
 
 // Products Menu
-bot.hears(keyboards.add, async (ctx) => {
+bot.command("yangi_shina", async (ctx) => {
   try {
     await ctx.scene.enter("gather-product-info");
   } catch (err) {
@@ -71,20 +66,17 @@ bot.hears(keyboards.add, async (ctx) => {
   }
 });
 
-bot.hears(keyboards.see, async (ctx) => {
+bot.command("shinalar", async (ctx) => {
   await ctx.scene.enter("show-products");
-});
+})
 
-bot.hears(keyboards.edit, (ctx) => {});
+
+bot.action(keyboards.edit, (ctx) => { });
 
 // General
-bot.hears("◀️", async (ctx) => {
-  await ctx.reply("Asosiy menu", mainMenu);
-  return;
-});
-
-bot.command("quit", async (ctx) => {
-  await ctx.telegram.leaveChat();
+bot.hears(keyboards.back, async (ctx) => {
+  await ctx.scene.leave();
+  await ctx.reply("Asosiy menu");
   return;
 });
 

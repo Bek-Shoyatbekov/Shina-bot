@@ -26,6 +26,7 @@ export const setUSDRate = async (val) => {
 
 export const getProducts = async (offset, limit) => {
   try {
+    offset = offset ? offset : 0;
     let products = await Product.find()
       .skip(offset || 0)
       .limit(limit || 10)
@@ -35,6 +36,11 @@ export const getProducts = async (offset, limit) => {
   } catch (err) {
     console.log(err);
   }
+};
+
+export const getAllProducts = async () => {
+  let products = await Product.find();
+  return products;
 };
 
 export const addProducts = async (data) => {

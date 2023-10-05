@@ -1,19 +1,18 @@
 import { Schema, model } from "mongoose";
 
 const productSchema = new Schema({
-  full_name: String,
-  price_usd: String,
-  percent_3m: String,
-  percent_6m: String,
-  percent_9m: String,
-  quantity: String,
-  company: String,
-  percent_cash: String,
+  tuliq_nomi: String,
+  narxi: Number,
+  foiz_3oy: String,
+  foiz_6oy: String,
+  foiz_9oy: String,
+  soni: String,
+  kompaniyasi: String,
+  naqtga: String,
   diameter: String,
-  size: String,
-  width: String,
-  image: String,
-  full_model: String,
+  ulcham: String,
+  eni: String,
+  rasmi: String,
 });
 
 export default model("Product", productSchema);
