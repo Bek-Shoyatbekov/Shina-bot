@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 
-const historyPath = path.join( './usersaction.json');
+const historyPath = path.join('./usersaction.json');
 
 const createUserHistory = (userID, username, name, lang, action) => {
     const historyData = JSON.parse(fs.readFileSync(historyPath));
     const userHistory = historyData.filter((history) => history.userID === userID);
-    if(userHistory.length == 0) {
+    if (userHistory.length == 0) {
         const newUser = {
             userID: userID,
             username: username,
@@ -30,7 +30,7 @@ const updateAction = (userID, action) => {
     userHistory.action = action;
     fs.writeFileSync(historyPath, JSON.stringify(userHistory));
 }
-const newData =  (userID, dataKey, dataValue) => {
+const newData = (userID, dataKey, dataValue) => {
     const historyData = JSON.parse(fs.readFileSync(historyPath));
     const userHistory = historyData.filter((history) => history.userID === userID)[0];
     userHistory[dataKey] = dataValue;
@@ -67,6 +67,6 @@ const deleteUserHistory = (user) => {
     const historyData = JSON.parse(fs.readFileSync(historyPath));
     const userHistory = historyData.filter((history) => history.user !== user);
     fs.writeFileSync(historyPath, JSON.stringify(userHistory));
-    }
+}
 
 export { createUserHistory, getUserHistory, deleteUserHistory, updateAction, newData, updAndNewData, getByKey, getUserLang, getUserAction };

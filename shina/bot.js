@@ -3,10 +3,6 @@ import { config } from "dotenv";
 import { Markup } from "telegraf";
 import {
   createUserHistory,
-  getUserHistory,
-  deleteUserHistory,
-  updateAction,
-  newData,
   updAndNewData,
   getByKey,
   getUserLang,
@@ -98,7 +94,6 @@ bot.on("callback_query", async (ctx) => {
     ctx.callbackQuery.data === "installment_9"
   ) {
     let timeLimit = ctx.callbackQuery.data.split("_")[1];
-    console.log(timeLimit);
     let ans = getLang(ctx.callbackQuery.from.id);
     updAndNewData(
       ctx.callbackQuery.from.id,
@@ -106,7 +101,7 @@ bot.on("callback_query", async (ctx) => {
       "username",
       ctx.callbackQuery.from.username
     );
-    console.log(ctx);
+
     ctx.reply(
       ans.wannaBuy(ctx.callbackQuery.from.id, `${timeLimit} oylik kredit`)
     );
@@ -125,8 +120,8 @@ bot.on("callback_query", async (ctx) => {
       userData.language,
       "askContact"
     );
-    let answer = getLang(ctx.callbackQuery.from.id);
-    ctx.deleteMessage();
+    let answer = getLang(ctx.callbackQuery.from.id)
+    // ctx.deleteMessage();
     ctx.reply(
       answer.greetingContactText(ctx.callbackQuery.from.first_name),
       Markup.keyboard([
@@ -155,7 +150,6 @@ bot.on("contact", async (ctx) => {
 
 bot.on("message", async (ctx) => {
   let answer = getLang(ctx.message.from.id);
-  console.log(getUserAction(ctx.message.from.id));
   if (getUserAction(ctx.message.from.id) == "askRegion") {
     updAndNewData(
       ctx.message.from.id,
@@ -234,10 +228,7 @@ bot.on("message", async (ctx) => {
       reply_to_message_id: ctx.message.message_id + 1,
     };
     await ctx.replyWithPhoto(res.postPhoto);
-    //reply to the last message photo
     await ctx.reply(res.postText, options);
-    // ctx.reply(res.postText, Markup.inlineKeyboard(res.postInlineKeyboard).resize(), {parse_mode: "HTML"});
-    // ctx.replyWithPhoto(res.postPhoto, {caption: res.postText, parse_mode: "HTML"}, Markup.inlineKeyboard(res.postInlineKeyboard).resize());
   }
 });
 
@@ -255,7 +246,6 @@ bot.launch();
 // create a function that gets user id and returns its language and choose either uzlang or rulang
 function getLang(id) {
   let userLang = getUserLang(id);
-  console.log(userLang, "userLang");
   if (userLang == "uz") {
     return uzlang;
   } else {

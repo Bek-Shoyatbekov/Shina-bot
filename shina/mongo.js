@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import { MongoClient } from "mongodb";
 import { config } from "dotenv";
 config();
 // Connection URL
 const url = process.env.MONGO_URI;
 
 // Database name
-const dbName = "shina";
+const dbName = "shinaAdmin";
 
 // Create a new document in the collection
 const createDocument = async (document) => {
@@ -35,8 +35,8 @@ const allProducts = async () => {
     await client.connect();
     const db = client.db(dbName);
     const collection = db.collection("products");
-    const documents = await collection.find({}).toArray();
-    console.log("Found documents:", documents);
+    const documents = await collection.find().toArray();
+    return documents;
   } finally {
     client.close();
   }
@@ -131,6 +131,24 @@ const getByField = async (filter, field) => {
 };
 
 const getUSDRate = () => {
+  const client = new MongoClient(url);
+  return new Promise((resolve, reject) => {
+    client
+      .connect()
+      .then(async () => {
+        const db = client.db(dbName);
+        const collection = db.collection("cons");
+        const document = await collection
+          .findOne({ id: 0 })
+        resolve(document.val);
+      })
+      .catch((err) => {
+        reject(err);
+      })
+      .finally(() => {
+        client.close();
+      });
+  });
   let rate = 11600;
   return rate;
 };
@@ -140,6 +158,27 @@ const getUSDRate = () => {
 // findDocuments();
 // updateDocument({ name: 'John' }, { city: 'San Francisco' });
 // deleteDocument({ name: 'John' });
+
+// Get specific fields in the collection
+// const updateDocument = async (filter, update) => {
+//   const client = new MongoClient(url);
+//   return new Promise((resolve, reject) => {
+//     client
+//       .connect()
+//       .then(async () => {
+//         const db = client.db(dbName);
+//         const collection = db.collection("products");
+//         const result = await collection.updateOne(filter, { $set: update });
+//         resolve(result);
+//       })
+//       .catch((err) => {
+//         reject(err);
+//       })
+//       .finally(() => {
+//         client.close();
+//       });
+//   });
+// };
 
 export {
   createDocument,

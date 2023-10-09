@@ -1,25 +1,26 @@
-import { regionsRU, regionsUZ } from './data/regions.js'; 
+import { regionsRU, regionsUZ } from './data/regions.js';
 import { createUserHistory, getUserHistory, deleteUserHistory, updateAction, newData, updAndNewData, getByKey, getUserLang, getUserAction } from './useractions.js';
 import { createDocument, allProducts, getByField, findDocument, updateDocument, deleteDocument, getUSDRate } from './mongo.js';
 import axios from 'axios'
+import { logger } from './utils.js';
 
 class ChosenLanguage {
-  constructor(lang) {
-    this.language = lang || "uz";
-    this.isUzbek = lang == "uz";
-  }
+    constructor(lang) {
+        this.language = lang || "uz";
+        this.isUzbek = lang == "uz";
+    }
 
     setLanguage(language) {
         this.language = language;
     }
 
-    getLanguage() {  
+    getLanguage() {
         return this.language;
     }
     greetingContactText(name) {
-        if(this.isUzbek) {
-        return `\nBotga xush kelibsiz, ${name}! \n\n Iltimos, raqamingizni kiriting:`;
-        } else{
+        if (this.isUzbek) {
+            return `\nBotga xush kelibsiz, ${name}! \n\n Iltimos, raqamingizni kiriting:`;
+        } else {
             return `\nДобро пожаловать в бот, ${name}! \n\n Пожалуйста, введите свой номер телефона:`;
         }
     }
@@ -47,28 +48,26 @@ class ChosenLanguage {
     companiesText() {
         return this.isUzbek ? "Iltimos, brendni tanlang:" : "Пожалуйста, выберите бренд:";
     }
-    companiesButtons() {
-        let brands = [
-            'FUMAXX',   'GRENLANDER',
-            'JOYROAD',  'MAAXTER',
-            'MAXXPRO',  'TRACMAX',
-            'YALLAMA',  'GOFORM',
-            'HABILEAD', 'KINGFOREST',
-            'LARGO',    'TERAFLEX',
-            'WANDA',    'KUMHO',
-            'ROADARES'
-          ];
-        return this.divideArrayN(brands, 3);
+    async companiesButtons() {
+        let products = await allProducts();
+        let companiesList = [];
+        for (let i in products) {
+            companiesList.push(products[i].company);
+        }
+        return this.divideArrayN(companiesList, 3);
     }
     diametersOfTiresText() {
         return this.isUzbek ? "Avtoshina shinasi diametrini tanlang:" : "Выберите диаметр шины:";
     }
     async diameterButtons(company) {
-        let availableDiameters = await getByField({company:company}, "diameter");
-        // get all values of diameter key, make them unique and sort them
-        availableDiameters = this.makeUnique(availableDiameters.map(item => item.diameter)).sort();
-        console.log(availableDiameters);
-        let diameters = ["R13", "R14", "R15","R16", "R17", "R18", "R19", "R20", "R21", "R22"];
+        let products = await allProducts();
+        let diametersList = [];
+        for (let i in products) {
+            diametersList.push(products[i].diameter);
+        }
+        let availableDiameters = this.makeUnique(diametersList).sort();
+        // console.log(availableDiameters);
+        // let diameters = ["R13", "R14", "R15", "R16", "R17", "R18", "R19", "R20", "R21", "R22"];
         return this.divideArray(availableDiameters);
     }
     sizesOfTiresText() {
@@ -76,7 +75,7 @@ class ChosenLanguage {
     }
     async sizesOfTiresButtons(diameter, id) {
         let company = getByKey(id, "company");
-        let availableSizes = await findDocument({diameter:diameter, company:company});
+        let availableSizes = await findDocument({ diameter: diameter, company: company });
         // get all width and size values, make them unique and sort them "size/width"
         availableSizes = availableSizes.map(item => item.size + "/" + item.width).sort();
         let widths = [
@@ -87,23 +86,23 @@ class ChosenLanguage {
             '205/65', '205/55',
             '205/45', '235/55',
             '225/60'
-          ];
-        
+        ];
+
         return this.divideArrayN(availableSizes, 3);
     }
     tireBrandsText() {
         return this.isUzbek ? "Avtoshina brendini tanlang:" : "Выберите бренд шины:";
     }
-    async resultsText(id){
+    async resultsText(id) {
         let getUser = await getUserHistory(id)[0]
         let params = {
             diameter: getUser.diameter,
-            size: Number(getUser.width.split("/")[0]),
-            width: Number(getUser.width.split("/")[1]),
+            size: getUser.width.split("/")[0],
+            width: getUser.width.split("/")[1],
             company: getUser.company,
         }
         let res = await findDocument(params);
-        newData(id,"chosenProduct", res[0]);
+        newData(id, "chosenProduct", res[0]);
         return this.createPost(res[0], id);
     }
     paymentMethodsText() {
@@ -112,15 +111,15 @@ class ChosenLanguage {
     // a function that divides an array every 3 elements
     divideArray(array) {
         let dividedArray = [];
-        for(let i = 0; i < array.length; i+=3) {
-            dividedArray.push(array.slice(i, i+3));
+        for (let i = 0; i < array.length; i += 3) {
+            dividedArray.push(array.slice(i, i + 3));
         }
         return dividedArray;
     }
-    divideArrayN (array, n) {
+    divideArrayN(array, n) {
         let dividedArray = [];
-        for(let i = 0; i < array.length; i+=n) {
-            dividedArray.push(array.slice(i, i+n));
+        for (let i = 0; i < array.length; i += n) {
+            dividedArray.push(array.slice(i, i + n));
         }
         return dividedArray;
     }
@@ -136,24 +135,24 @@ class ChosenLanguage {
         let numberArray = numberString.split("");
         let dotIndex = numberArray.indexOf(".");
         let counter = 0;
-        for(let i = dotIndex - 1; i >= 0; i--) {
+        for (let i = dotIndex - 1; i >= 0; i--) {
             counter++;
-            if(counter % 3 === 0) {
+            if (counter % 3 === 0) {
                 numberArray.splice(i, 0, " ");
             }
         }
         return numberArray.join("");
     }
-    createPost(obj, userID){
-        const rateUSD = getUSDRate();
+    async createPost(obj, userID) {
+        const rateUSD = await getUSDRate();
         const season = getByKey(userID, "tireSeason");
         return {
             postText: `
             #${obj.id_product}
 <b>${this.isUzbek ? "Brend" : "Бренд"}: </b> ${obj.full_model}
-<b>${ this.isUzbek ? "Mavsum" : "Сезон"}: </b> ${season}
-<b>${ this.isUzbek ? "O'lcham" : "Размер"}: </b>${obj.size}/${obj.width} ${obj.diameter}
-<b>${ this.isUzbek ? "Narxi" : "Цена"} </b> ${Math.round(this.addPercentToPrice(obj.price_usd, obj.percent_cash) * rateUSD)} UZS
+<b>${this.isUzbek ? "Mavsum" : "Сезон"}: </b> ${season}
+<b>${this.isUzbek ? "O'lcham" : "Размер"}: </b>${obj.size}/${obj.width} ${obj.diameter}
+<b>${this.isUzbek ? "Narxi" : "Цена"} </b> ${Math.round(this.addPercentToPrice(obj.price_usd, obj.percent_cash) * rateUSD)} UZS
             `,
             postPhoto: 'https://danthetireman.com/media/catalog/product/cache/81a0d5908f2df9b49a6f22c63d8da6df/2/0/2001405.jpg',
             postInlineKeyboard: [
@@ -176,47 +175,46 @@ class ChosenLanguage {
             ]
         }
     }
-    wannaBuy(id, paymentType){
+    wannaBuy(id, paymentType) {
         this.sendGroup(id, paymentType)
         return this.isUzbek ? "Buyurtmangiz qabul qilindi. Siz bilan operatorlarimiz 10 daqiqa ichida aloqaga chiqishadi" : "Ваш заказ принят. Наши операторы свяжутся с Вами в течении 10 минут."
     }
-    sendGroup(id, typePayment){
+    sendGroup(id, typePayment) {
         let user = getUserHistory(id)[0];
-        let txt = `${user.chosenProduct.full_name} ${user.chosenProduct.id_product}`+"\n"+`
-To'lov turi: ${typePayment}`+"\n"+`
-Ism: ${user.name}`+"\n"+`
-Nomer: +${user.phone}`+"\n"+`
-Telegram: [${user.name}](tg://user?id=${user.userID})`+"\n"+`
-Region: ${user.region}`+"\n"+`
+        let txt = `${user.chosenProduct.full_name} ${user.chosenProduct.id_product}` + "\n" + `
+To'lov turi: ${typePayment}` + "\n" + `
+Ism: ${user.name}` + "\n" + `
+Nomer: +${user.phone}` + "\n" + `
+Telegram: [${user.name}](tg://user?id=${user.userID})` + "\n" + `
+Region: ${user.region}` + "\n" + `
 Til: ${user.lang}
         `;
         let params = {
-            params:{
-                chat_id:-1001574980631,
+            params: {
+                chat_id: -1001574980631,
                 parse_mode: "Markdown",
                 text: txt
             }
         }
-        console.log("https://api.telegram.org/bot5829231004:AAFR8_FwJd7W4YQtnKFqa6AoT244q6H-s8g/sendMessage?chat_id=-1001574980631&parse_mode=Markdown&text="+txt)
-        axios.get("https://api.telegram.org/bot5829231004:AAFR8_FwJd7W4YQtnKFqa6AoT244q6H-s8g/sendMessage",params)
+        console.log("https://api.telegram.org/bot5829231004:AAFR8_FwJd7W4YQtnKFqa6AoT244q6H-s8g/sendMessage?chat_id=-1001574980631&parse_mode=Markdown&text=" + txt)
+        axios.get("https://api.telegram.org/bot5829231004:AAFR8_FwJd7W4YQtnKFqa6AoT244q6H-s8g/sendMessage", params)
     }
-    async creditOptionsText(id){    
-        const rateUSD = getUSDRate();
+    async creditOptionsText(id) {
+        const rateUSD = await getUSDRate();
         let getUser = await getUserHistory(id)[0];
         let params = {
             diameter: getUser.diameter,
-            size: Number(getUser.width.split("/")[0]),
-            width: Number(getUser.width.split("/")[1]),
-            company: getUser.company,
+            ulcham: Number(getUser.width.split("/")[0]),
+            eni: Number(getUser.width.split("/")[1]),
+            kompaniyasi: getUser.company,
         }
         let res = await findDocument(params);
-        console.log(res)
-        let price_3 = (this.addPercentToPrice(res[0].price_usd, res[0].percent_3m)*rateUSD);
-        let price_6 = (this.addPercentToPrice(res[0].price_usd, res[0].percent_6m)*rateUSD);
-        let price_9 = (this.addPercentToPrice(res[0].price_usd, res[0].percent_9m)*rateUSD);
-        let price_3per = price_3/3;
-        let price_6per = price_3/6;
-        let price_9per = price_3/9;
+        let price_3 = (this.addPercentToPrice(res[0].narxi, res[0].foiz_3oy) * rateUSD);
+        let price_6 = (this.addPercentToPrice(res[0].narxi, res[0].foiz_6oy) * rateUSD);
+        let price_9 = (this.addPercentToPrice(res[0].narxi, res[0].foiz_9oy) * rateUSD);
+        let price_3per = price_3 / 3;
+        let price_6per = price_3 / 6;
+        let price_9per = price_3 / 9;
         let txtuz = `
         Bo'lib to'lash narxlari:\n
 3 oyga: <b>${price_3per}</b> so'm x 3 = <b>${price_3}</b>  so'm\n
@@ -225,7 +223,7 @@ Til: ${user.lang}
         `;
         return txtuz;
     }
-    creditButtons(){
+    creditButtons() {
         return [
             [
                 {

@@ -17,6 +17,7 @@
   },
   {
     "full_name": "GRENLANDER 175-70-R12",
+    "full_model": "GRENLANDER",
     "id_product": 462,
     "price_usd": 30.5,
     "percent_3m": 22,
@@ -28,7 +29,6 @@
     "diameter": "R12",
     "size": 175,
     "width": 70,
-    "full_model": "GRENLANDER",
     "id": 2
   },
   {
